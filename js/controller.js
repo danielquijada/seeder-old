@@ -20,7 +20,7 @@ app.controller("controller", function($scope, $http) {
 
           var requestLeague = "https://euw.api.pvp.net/api/lol/euw/v2.5/league/by-summoner/" + id + "/entry?api_key=872376d4-d057-4cb3-b9aa-6af145caeb89";
 
-          $.http({
+          $http({
               method:'GET',
               url: requestLeague
             }).then(function(result) {
