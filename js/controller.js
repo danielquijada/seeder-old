@@ -1,5 +1,5 @@
 var app = angular.module("seeder", []);
-app.controller("controller", function($scope) {
+app.controller("controller", function($scope, $http) {
   $scope.summoner = {
     "name":"kísa"
   };
