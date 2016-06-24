@@ -16,7 +16,7 @@ app.controller("controller", function($scope, $http) {
       url: requestSumm
     }).then(function(summData) {
         console.log("CHECKPOINT 2");
-          var id = summData[name].id;
+          var id = summData.data[name].id;
 
           var requestLeague = "https://euw.api.pvp.net/api/lol/euw/v2.5/league/by-summoner/" + id + "/entry?api_key=872376d4-d057-4cb3-b9aa-6af145caeb89";
 
@@ -25,7 +25,7 @@ app.controller("controller", function($scope, $http) {
               url: requestLeague
             }).then(function(result) {
               console.log("CHECKPOINT 3");
-              var leagueData = result[id][0];
+              var leagueData = result.data[id][0];
               summData = leagueData.entries[0];
               $scope.result = {
                 "tier": leagueData.tier,
