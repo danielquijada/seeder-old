@@ -13,9 +13,12 @@
 
     <!-- Bootstrap Core CSS - Uses Bootswatch Flatly Theme: http://bootswatch.com/flatly/ -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Custom CSS -->
+    <!-- Template CSS -->
     <link href="css/freelancer.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="css/seeder.css" rel="stylesheet">
+
+    <link rel="icon" type="image/png" href="img/favicon.png">
 
     <!-- Custom Fonts -->
     <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
@@ -85,14 +88,16 @@
 
     <section id="application">
       <div class="container">
-        <div ng-app="seeder" ng-controller="controller">
-          <form class="col-sm-6" ng-submit="calculate()">
-            <p>Summoner Name : <input type="text" ng-model="summoner.name"></p>
-            <button onclick="calculate()">Submit</button>
+        <div ng-app="seeder" ng-controller="controller as ctrl">
+          <form class="col-sm-6 text-center">
+            <p>Teams:</p>
+            <textarea class="form-control" ng-model="teams" rows="20"></textarea>
+            <a class="btn btn-primary" ng-click="ctrl.calculate()" role="button">Submit</a>
           </form>
 
           <div class="col-sm-6">
-            <label>{{result}}</label>
+            <p class="text-center">Results:</p>
+            <textarea readonly class="form-control" rows="20">{{result | formatJson}}</textarea>
           </div>
         </div>
       </div>
