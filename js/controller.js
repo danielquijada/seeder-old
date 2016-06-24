@@ -11,15 +11,19 @@ app.controller("controller", function($scope) {
     var requestSumm = "https://euw.api.pvp.net/api/lol/euw/v1.4/summoner/by-name/" + name + "?api_key=872376d4-d057-4cb3-b9aa-6af145caeb89";
 
     console.log("CHECKPOINT 1");
-    $.ajax(requestSumm)
-      .done(function(summData) {
+    $http({
+      method: 'GET',
+      url: requestSumm
+    }).then(function(summData) {
         console.log("CHECKPOINT 2");
           var id = summData[name].id;
 
           var requestLeague = "https://euw.api.pvp.net/api/lol/euw/v2.5/league/by-summoner/" + id + "/entry?api_key=872376d4-d057-4cb3-b9aa-6af145caeb89";
 
-          $.ajax(requestLeague)
-            .done(function(result) {
+          $.http({
+              method:'GET',
+              url: requestLeague
+            }).then(function(result) {
               console.log("CHECKPOINT 3");
               var leagueData = result[id][0];
               summData = leagueData.entries[0];
