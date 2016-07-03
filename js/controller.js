@@ -173,34 +173,81 @@ app.controller('controller', function($scope, $http, $q) {
       return getSummonersInformation(summoners, teams);
   }
 
-  // function getSummonersInformation(summoners, teams) {
-  //     var information = {};
-  //
-  //     var ids = Object.keys(summoners).map(function(summoner) {
-  //         return summoners[summoner].id;
-  //     });
-  //
-  //     var ids = pageIds (ids, 10);
-  //
-  //     var promises = [];
-  //     for (var i in ids) {
-  //         $scope.result += ".";
-  //         var index = ids[i];
-  //         var promise = fetchLeagues(index);
-  //         promises.push(promise);
-  //         promise.then(function(response) {
-  //             var parsePromise = parseData(summoners, response.data);
-  //             promises.push(parsePromise);
-  //             parsePromise.then(function(summs) {
-  //                 console.log("Then summs", summs);
-  //                 promises.push(calculatePlayerValue(summoners, summs, teams));
-  //             });
-  //         });
-  //     }
-  //     $q.all(promises).then(function(valuesResponses){
-  //         $scope.result = summoners;
-  //     })
-  // }
+  function valueToDivision (value) {
+      var obj = valueToDivisionObject(value);
+      return obj.tier + " " + obj.division + " - " + obj.lp + " LP"
+  }
+
+  function valueToDivisionObject(value) {
+      var tierNum = value / TIER_VALUE;
+      var semiValue = value % TIER_VALUE;
+
+      var divisionNum = semiValue / DIVISION_VALUE;
+
+      var lp = (semiValue % DIVISION_VALUE).toFixed(0);
+      var tier = tierNumToTier(tierNum);
+      var division = divisionNumToDivision(divisionNum);
+
+      var lvl = {
+          "tier": tier,
+          "division": division,
+          "lp": lp
+      }
+
+      return lvl;
+  }
+
+  function tierNumToTier(tierNum) {
+      var tier;
+      tierNum = Math.floor(tierNum);
+      switch (tierNum) {
+        case 0:
+            tier = "BRONZE";
+            break;
+        case 1:
+            tier = "SILVER";
+            break;
+        case 2:
+            tier = "GOLD";
+            break;
+        case 3:
+            tier = "PLATINUM";
+            break;
+        case 4:
+            tier = "DIAMOND";
+            break;
+        case 5:
+            tier = "MASTER";
+            break;
+        case 6:
+            tier = "CHALLENGER";
+            break;
+      }
+      return tier;
+  }
+
+  function divisionNumToDivision(divisionNum) {
+      var div;
+      divisionNum = Math.floor(divisionNum);
+      switch (divisionNum) {
+        case 0:
+            div = "V";
+            break;
+        case 1:
+            div = "IV";
+            break;
+        case 2:
+            div = "III";
+            break;
+        case 3:
+            div = "II";
+            break;
+        case 4:
+            div = "I";
+            break;
+      }
+      return div;
+  }
 
   function getSummonersInformation(summoners, teams) {
       var information = {};
@@ -233,7 +280,7 @@ app.controller('controller', function($scope, $http, $q) {
               }
               $q.all(cpvPromises).then(function(responses){
                   calculateTeamsValue(teams, summoners);
-                  $scope.result = formatOrderedTeams(orderTeams(teams));
+                  $scope.result = formatOrderedTeams(orderTeams(teams), teams);
               });
           });
       });
@@ -243,10 +290,10 @@ app.controller('controller', function($scope, $http, $q) {
       })
   }
 
-  function formatOrderedTeams(teams) {
+  function formatOrderedTeams(teams, teamsObject) {
       var output = "";
       for (var i = 0; i < teams.length; i++) {
-          output += (i + 1) + ". " + teams[i] + "\n";
+          output += (i + 1) + ". " + teams[i] + "(" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
       }
       return output;
   }
