@@ -100,7 +100,7 @@
             <p>New Team:</p>
             <label class="col-sm-6 text-right">Team Name:</label>
             <input type="text" ng-model="new.name">
-            <br/>
+            <hr>
             <div ng-repeat="player in new.members track by $index">
                 <label class="col-sm-6 text-right">Player #{{$index}}:</label>
                 <input type="text" ng-model="new.members[$index]">
