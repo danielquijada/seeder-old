@@ -92,10 +92,26 @@
           <form class="col-sm-6 text-center">
             <p>Teams:</p>
             <textarea class="form-control" ng-model="teams" rows="20"></textarea>
+            <a class="btn btn-default" ng-click="ctrl.formatInput()" role="button">Format</a>
             <a class="btn btn-primary" ng-click="ctrl.calculate()" role="button">Submit</a>
+            <a class="btn btn-success" ng-click="ctrl.addTeam()" role="button">Add Team</a>
+          </form>
+          <form class="col-sm-6 text-center" ng-if="newTeam">
+            <p>New Team:</p>
+            <label class="col-sm-6 text-right">Team Name:</label>
+            <input type="text" ng-model="new.name">
+            <div ng-repeat="player in new.members track by $index">
+                <label class="col-sm-6 text-right">Player #{{$index}}:</label>
+                <input type="text" ng-model="new.members[$index]">
+            </div>
+            <div>
+                <a class="btn fa fa-times has-icon btn-default" ng-click="ctrl.cancelNewTeam()" role="button"> Cancel</a>
+                <a class="btn fa fa-plus has-icon btn-success" ng-click="ctrl.addPlayer()" role="button"> Add Player</a>
+                <a class="btn fa fa-save has-icon btn-primary" ng-click="ctrl.saveNewTeam()" role="button"> Save</a>
+            </div>
           </form>
 
-          <div class="col-sm-6">
+          <div class="col-sm-6" ng-if="!newTeam">
             <p class="text-center">Results:</p>
             <textarea readonly class="form-control" rows="20">{{result | formatJson}}</textarea>
           </div>
