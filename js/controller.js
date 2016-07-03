@@ -2,18 +2,10 @@ var app = angular.module('seeder', []);
 app.controller('controller', function($scope, $http, $q) {
 
   self = this;
-  $scope.summoner = {
-    'name':'kísa'
-  };
 
   $scope.newTeam = false;
 
-  var SWIOLLVFER_KEY = '872376d4-d057-4cb3-b9aa-6af145caeb89';
-  var ALBER_KEY = 'fd37f6ab-c9e4-4fae-8cb0-0408f29c74c2';
-  var CARTON_KEY = '022fa2ee-2c31-45e3-aa97-103ecb3289b8';
-  var YCKEB_KEY = '5109351d-37b9-416f-98ba-2ce41c11f60b';
   var api_index = 0;
-  var API_KEYS = [SWIOLLVFER_KEY, ALBER_KEY, CARTON_KEY, YCKEB_KEY];
 
   var DEFAULT_VALUE = 500; // Equivalente a S5 0LP
   var DIVISION_VALUE = 100;
@@ -23,7 +15,10 @@ app.controller('controller', function($scope, $http, $q) {
   var example = '{\r\n\t\"team1\": [\r\n\t\t\"Swiollvfer\",\r\n\t\t\"k\u00EDsa\",\r\n\t\t\"allow0w\",\r\n\t\t\"caradrio\",\r\n\t\t\"ERGHUN\"\r\n\t],\r\n\t\"team2\": [\r\n\t\t\"cpw fernix\",\r\n\t\t\"anikila2r\",\r\n\t\t\"cPw Flameador9\",\r\n\t\t\"pijusmagnificous\",\r\n\t\t\"cpw xabrii\",\r\n\t\t\"AitorStrak\"\r\n\t]\r\n}';
   // console.log(JSON.stringify(JSON.parse(example), null, '\t'));
   var data = retrieveData();
+  var keys = retrieveKeys();
   $scope.teams = data ? data : example;
+  $scope.keys = keys ? keys : [];
+  $scope.seeKeys = $scope.keys.length === 0 ? true : false;
 
   self.formatInput = function() {
       var teams = JSON.parse($scope.teams.toLowerCase());
@@ -32,6 +27,7 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   self.calculate = function() {
+      notFound.splice(0,notFound.length);
       $scope.result='Buscando';
       var teams = JSON.parse($scope.teams.toLowerCase());
       $scope.teams=formatJson(teams); // Easy-to-Read
@@ -73,6 +69,20 @@ app.controller('controller', function($scope, $http, $q) {
 
   self.cancelNewTeam = function() {
       $scope.newTeam = false;
+  }
+
+  self.saveKeys = function() {
+      $scope.keys = $scope.keys.filter(function(v){return v!==''});
+      persistKeys();
+      $scope.seeKeys = false;
+  }
+
+  self.addKey = function() {
+      $scope.keys.push("");
+  }
+
+  self.showKeys = function() {
+      $scope.seeKeys = true;
   }
 
   function allSummonerInfoGathered(info) {
@@ -190,8 +200,16 @@ app.controller('controller', function($scope, $http, $q) {
       return window.localStorage.getItem("teams");
   }
 
+  function retrieveKeys() {
+      return JSON.parse(window.localStorage.getItem("keys"));
+  }
+
   function persistData() {
       window.localStorage.setItem("teams", $scope.teams);
+  }
+
+  function persistKeys() {
+      window.localStorage.setItem("keys", JSON.stringify($scope.keys));
   }
 
   function calculatePlayerValue(summoners, summs) {
@@ -216,7 +234,7 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   function getApiKey() {
-      return API_KEYS[api_index++ % API_KEYS.length];
+      return $scope.keys[api_index++ % $scope.keys.length];
   }
 
   function getSummonersInfo(summoners, teams) {
