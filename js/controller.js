@@ -22,13 +22,13 @@ app.controller('controller', function($scope, $http, $q) {
   var notFound =  [];
   var example = '{\r\n\t\"team1\": [\r\n\t\t\"Swiollvfer\",\r\n\t\t\"k\u00EDsa\",\r\n\t\t\"allow0w\",\r\n\t\t\"caradrio\",\r\n\t\t\"ERGHUN\"\r\n\t],\r\n\t\"team2\": [\r\n\t\t\"cpw fernix\",\r\n\t\t\"anikila2r\",\r\n\t\t\"cPw Flameador9\",\r\n\t\t\"pijusmagnificous\",\r\n\t\t\"cpw xabrii\",\r\n\t\t\"AitorStrak\"\r\n\t]\r\n}';
   // console.log(JSON.stringify(JSON.parse(example), null, '\t'));
-
-  $scope.teams = example;
+  var data = retrieveData();
+  $scope.teams = data ? data : example;
 
   self.formatInput = function() {
       var teams = JSON.parse($scope.teams.toLowerCase());
       $scope.teams=formatJson(teams); // Easy-to-Read
-      console.log($scope.new);
+      persistData();
   }
 
   self.calculate = function() {
@@ -41,6 +41,7 @@ app.controller('controller', function($scope, $http, $q) {
           var summonersInfo = getSummonerIdsSuccess(response);
           getSummonersInfo(summonersInfo, teams);
       });
+      persistData();
   }
 
   self.addTeam = function() {
@@ -52,6 +53,7 @@ app.controller('controller', function($scope, $http, $q) {
           "name": "",
           "members": []
       }
+      persistData();
   }
 
   self.addPlayer = function() {
@@ -66,6 +68,7 @@ app.controller('controller', function($scope, $http, $q) {
       var nw = $scope.new;
       teams[nw.name] = nw.members;
       $scope.teams=formatJson(teams); // Easy-to-Read
+      persistData();
   }
 
   self.cancelNewTeam = function() {
@@ -181,6 +184,14 @@ app.controller('controller', function($scope, $http, $q) {
             break;
       };
       return number * TIER_VALUE;
+  }
+
+  function retrieveData() {
+      return window.localStorage.getItem("teams");
+  }
+
+  function persistData() {
+      window.localStorage.setItem("teams", $scope.teams);
   }
 
   function calculatePlayerValue(summoners, summs) {
