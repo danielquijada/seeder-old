@@ -293,7 +293,7 @@ app.controller('controller', function($scope, $http, $q) {
   function formatOrderedTeams(teams, teamsObject) {
       var output = "";
       for (var i = 0; i < teams.length; i++) {
-          output += (i + 1) + ". " + teams[i] + "(" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
+          output += (i + 1) + ". " + teams[i] + " (" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
       }
       return output;
   }
