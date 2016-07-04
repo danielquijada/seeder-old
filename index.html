@@ -124,13 +124,12 @@
                     <a class="btn fa fa-plus has-icon btn-success" ng-click="ctrl.addPlayer()" role="button"> Add Player</a>
                     <a class="btn fa fa-save has-icon btn-primary" ng-click="ctrl.saveNewTeam()" role="button"> Save</a>
                 </div>
+              </form>
+              <div class="col-sm-6" ng-if="!newTeam">
+                <p class="text-center">Results:</p>
+                <textarea readonly class="form-control" rows="20">{{result | formatJson}}</textarea>
+              </div>
             </div>
-          </form>
-
-          <div class="col-sm-6" ng-if="!newTeam">
-            <p class="text-center">Results:</p>
-            <textarea readonly class="form-control" rows="20">{{result | formatJson}}</textarea>
-          </div>
         </div>
       </div>
     </section>
