@@ -52,6 +52,23 @@ app.controller('controller', function($scope, $http, $q) {
       persistData();
   }
 
+  self.saveTeamsJson = function () {
+      download("teams.json", $scope.teams);
+  }
+
+  function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+  }
+
   self.addPlayer = function() {
       console.log($scope.new);
       $scope.new.members.push("");
