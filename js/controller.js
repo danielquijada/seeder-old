@@ -54,6 +54,21 @@ app.controller('controller', function($scope, $http, $q) {
 
   self.saveTeamsJson = function () {
       download("teams.json", $scope.teams);
+
+      var teams = JSON.parse($scope.teams.toLowerCase());
+      $scope.teams=formatJson(teams); // Easy-to-Read
+
+      var summonersArray = getSummoners(teams);
+      getSummonerIds(summonersArray).then(function(response) {
+          var ids = {};
+
+          for (key in Object.keys(response.data)) {
+              key = Object.keys(response.data)[key];
+              ids[key] = response.data[key].id;
+          }
+
+          download("summonerIds.json", JSON.stringify(ids));
+      });
   }
 
   function download(filename, text) {
