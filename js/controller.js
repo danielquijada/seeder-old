@@ -1,5 +1,5 @@
 var app = angular.module('seeder', []);
-app.controller('controller', function($http, $q) {
+app.controller('controller', function($http, $scope, $q) {
 
   self = this;
 
@@ -21,7 +21,7 @@ app.controller('controller', function($http, $q) {
   self.seeKeys = self.keys.length === 0 ? true : false;
 
   self.formatInput = function() {
-      var teams = JSON.parse(self.teams.toLowerCase());
+      var teams = JSON.parse(self.teams);
       self.teams=formatJson(teams); // Easy-to-Read
       persistData();
   }
@@ -29,7 +29,7 @@ app.controller('controller', function($http, $q) {
   self.calculate = function() {
       notFound.splice(0,notFound.length);
       self.result='Buscando';
-      var teams = JSON.parse(self.teams.toLowerCase());
+      var teams = JSON.parse(self.teams);
       self.teams=formatJson(teams); // Easy-to-Read
 
       var summonersIdsArray = getSummonerIdsAsArray(teams);
@@ -53,6 +53,61 @@ app.controller('controller', function($http, $q) {
       persistData();
   }
 
+    // input = document.getElementById('csvIn');
+    // var file = document.getElementById("csvIn").files[0];
+    // if (file) {
+    //   var reader = new FileReader();
+    //   reader.readAsText(file, "UTF-8");
+    //   reader.onload = function (evt) {
+    //       console.log("onload", evt.target.result);
+    //   }
+    //   reader.onerror = function (evt) {
+    //       console.log("error reading file");
+    //   }
+    // }
+
+  document.getElementById('csvIn').addEventListener('change', parseFile, false);
+
+  function processCSV(csv) {
+      var regex = /(.*);.*;.*;.*;.*?(\d+);.*;.*;.*;.*/g;
+      var matches = [];
+
+      var match = regex.exec(csv);
+      while (match != null) {
+          matches.push([match[1], match[2]]);
+          match = regex.exec(csv);
+      }
+
+      return arrayToObject(matches);
+  }
+
+  function arrayToObject(array) {
+      var object = {};
+
+      for (var i = 0; i < array.length; i++) {
+          if (!object[array[i][0]]) {
+              object[array[i][0]] = [];
+          }
+          object[array[i][0]].push(array[i][1]);
+      }
+
+      return object;
+  }
+
+  function parseFile (evt) {
+      var file = evt.target.files[0];
+
+      if (file) {
+          var reader = new FileReader();
+          reader.readAsText(file, "windows-1252");
+          reader.onload = function(e) {
+            var teams = processCSV(e.target.result);
+            self.teams = formatJson(teams);
+            $scope.$apply();
+          }
+      }
+  }
+
   self.addTeam = function() {
       if (self.newTeam) {
           return;
@@ -68,7 +123,7 @@ app.controller('controller', function($http, $q) {
   self.saveTeamsJson = function () {
       download("teams.json", self.teams);
 
-      var teams = JSON.parse(self.teams.toLowerCase());
+      var teams = JSON.parse(self.teams);
       self.teams=formatJson(teams); // Easy-to-Read
 
       var summonersArray = getSummonerIdsAsArray(teams);
@@ -106,7 +161,7 @@ app.controller('controller', function($http, $q) {
       self.newTeam = false;
       var teams;
       if (self.teams.trim().length != 0) {
-          teams = JSON.parse(self.teams.toLowerCase());
+          teams = JSON.parse(self.teams);
       } else {
           teams = {};
       }
@@ -273,16 +328,13 @@ app.controller('controller', function($http, $q) {
   }
 
   function calculatePlayerValue(playerData) {
-      var value = 0;
+      var value = DEFAULT_PLAYER_VALUE;
 
-      if (playerData.lp !== "undefined") {
+      if (playerData && playerData.lp !== "undefined") {
+          value = 0;
           value += playerData.lp;
           value += divisionToValue(playerData.division);
           value += tierToValue(playerData.tier);
-      } else {
-          if (!playerData.value) {
-              playerData.value = DEFAULT_PLAYER_VALUE;
-          }
       }
 
       return value;
@@ -408,21 +460,24 @@ app.controller('controller', function($http, $q) {
   function parseData(info, data) {
       for (var id in data) {
           var summData = data[id];
+          console.log(id);
           var soloqData = summData.find(function(entry){
               return entry.queue === "RANKED_SOLO_5x5";
           });
-          var sum = {
-              tier: soloqData.tier,
-              division: soloqData.entries[0].division,
-              lp: soloqData.entries[0].leaguePoints,
-              isFreshBlood: soloqData.entries[0].isFreshBlood,
-              isHotStreak: soloqData.entries[0].isHotStreak,
-              isInactive: soloqData.entries[0].isInactive,
-              isVeteran: soloqData.entries[0].isVeteran,
-              wins: soloqData.entries[0].wins,
-              losses: soloqData.entries[0].losses,
+          if (soloqData) {
+              var sum = {
+                  tier: soloqData.tier,
+                  division: soloqData.entries[0].division,
+                  lp: soloqData.entries[0].leaguePoints,
+                  isFreshBlood: soloqData.entries[0].isFreshBlood,
+                  isHotStreak: soloqData.entries[0].isHotStreak,
+                  isInactive: soloqData.entries[0].isInactive,
+                  isVeteran: soloqData.entries[0].isVeteran,
+                  wins: soloqData.entries[0].wins,
+                  losses: soloqData.entries[0].losses,
+              }
+              info[id] = sum;
           }
-          info[id] = sum;
       }
   }
 
