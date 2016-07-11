@@ -185,7 +185,7 @@ app.controller('controller', function($http, $q) {
       }
 
       orderedTeams = array.sort (function (a, b) {
-         return a.value - b.value;
+         return -(a.value - b.value);
       });
     //   while (Object.keys(teamsCopy).length > 0) {
     //       var maxVal = -1;
