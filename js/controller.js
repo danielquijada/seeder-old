@@ -1,51 +1,64 @@
 var app = angular.module('seeder', []);
-app.controller('controller', function($scope, $http, $q) {
+app.controller('controller', function($http, $q) {
 
   self = this;
 
-  $scope.newTeam = false;
+  self.newTeam = false;
 
   var api_index = 0;
 
-  var DEFAULT_VALUE = 500; // Equivalente a S5 0LP
+  var DEFAULT_PLAYER_VALUE = 500; // Equivalente a S5 0LP
   var DIVISION_VALUE = 100;
   var TIER_VALUE = 500;
 
   var notFound =  [];
-  var example = '{\r\n\t\"team1\": [\r\n\t\t\"Swiollvfer\",\r\n\t\t\"k\u00EDsa\",\r\n\t\t\"allow0w\",\r\n\t\t\"caradrio\",\r\n\t\t\"ERGHUN\"\r\n\t],\r\n\t\"team2\": [\r\n\t\t\"cpw fernix\",\r\n\t\t\"anikila2r\",\r\n\t\t\"cPw Flameador9\",\r\n\t\t\"pijusmagnificous\",\r\n\t\t\"cpw xabrii\",\r\n\t\t\"AitorStrak\"\r\n\t]\r\n}';
-  // console.log(JSON.stringify(JSON.parse(example), null, '\t'));
   var data = retrieveData();
   var keys = retrieveKeys();
-  $scope.teams = data ? data : example;
-  $scope.keys = keys ? keys : [];
-  $scope.seeKeys = $scope.keys.length === 0 ? true : false;
+  var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
+
+  this.teams = data ? data : example;
+  self.keys = keys ? keys : [];
+  self.seeKeys = self.keys.length === 0 ? true : false;
 
   self.formatInput = function() {
-      var teams = JSON.parse($scope.teams.toLowerCase());
-      $scope.teams=formatJson(teams); // Easy-to-Read
+      var teams = JSON.parse(self.teams.toLowerCase());
+      self.teams=formatJson(teams); // Easy-to-Read
       persistData();
   }
 
   self.calculate = function() {
       notFound.splice(0,notFound.length);
-      $scope.result='Buscando';
-      var teams = JSON.parse($scope.teams.toLowerCase());
-      $scope.teams=formatJson(teams); // Easy-to-Read
+      self.result='Buscando';
+      var teams = JSON.parse(self.teams.toLowerCase());
+      self.teams=formatJson(teams); // Easy-to-Read
 
-      var summonersArray = getSummoners(teams);
-      getSummonerIds(summonersArray).then(function(response) {
-          var summonersInfo = getSummonerIdsSuccess(response);
-          getSummonersInfo(summonersInfo, teams);
+      var summonersIdsArray = getSummonerIdsAsArray(teams);
+      getSummonersInfo(summonersIdsArray).then (function (info) {
+          for (var id in info) {
+              info[id].value = calculatePlayerValue(info[id]);
+          }
+
+          for (var team in teams) {
+              var t = teams[team];
+              t.value = calculateTeamValue (t, info);
+          }
+
+          var orderedTeams = orderTeams(teams);
+          self.result = formatOrderedTeams(orderedTeams);
       });
+    //   getSummonerIds(summonersArray).then(function(response) {
+    //       var summonersInfo = (response);
+    //       getSummonersInfo(summonersInfo, teams);
+    //   });
       persistData();
   }
 
   self.addTeam = function() {
-      if ($scope.newTeam) {
+      if (self.newTeam) {
           return;
       }
-      $scope.newTeam = true;
-      $scope.new = {
+      self.newTeam = true;
+      self.new = {
           "name": "",
           "members": []
       }
@@ -53,13 +66,14 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   self.saveTeamsJson = function () {
-      download("teams.json", $scope.teams);
+      download("teams.json", self.teams);
 
-      var teams = JSON.parse($scope.teams.toLowerCase());
-      $scope.teams=formatJson(teams); // Easy-to-Read
+      var teams = JSON.parse(self.teams.toLowerCase());
+      self.teams=formatJson(teams); // Easy-to-Read
 
-      var summonersArray = getSummoners(teams);
+      var summonersArray = getSummonerIdsAsArray(teams);
       getSummonerIds(summonersArray).then(function(response) {
+
           var ids = {};
 
           for (key in Object.keys(response.data)) {
@@ -85,36 +99,41 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   self.addPlayer = function() {
-      console.log($scope.new);
-      $scope.new.members.push("");
-      console.log($scope.new);
+      self.new.members.push("");
   }
 
   self.saveNewTeam = function() {
-      $scope.newTeam = false;
-      var teams = JSON.parse($scope.teams.toLowerCase());
-      var nw = $scope.new;
-      teams[nw.name] = nw.members;
-      $scope.teams=formatJson(teams); // Easy-to-Read
+      self.newTeam = false;
+      var teams;
+      if (self.teams.trim().length != 0) {
+          teams = JSON.parse(self.teams.toLowerCase());
+      } else {
+          teams = {};
+      }
+      var nw = self.new;
+      teams[nw.name] = nw.members.map(function(link) {
+          return link.match(/\/\d{8}/)[0].substr(1);
+      });
+      self.teams=formatJson(teams); // Easy-to-Read
       persistData();
   }
 
   self.cancelNewTeam = function() {
-      $scope.newTeam = false;
+      self.newTeam = false;
   }
 
   self.saveKeys = function() {
-      $scope.keys = $scope.keys.filter(function(v){return v!==''});
+      self.keys = self.keys.filter(function(v){return v!==''});
       persistKeys();
-      $scope.seeKeys = false;
+      self.seeKeys = false;
   }
 
   self.addKey = function() {
-      $scope.keys.push("");
+      self.keys.push("");
   }
 
   self.showKeys = function() {
-      $scope.seeKeys = true;
+      self.seeKeys = true;
   }
 
   function allSummonerInfoGathered(info) {
@@ -122,21 +141,20 @@ app.controller('controller', function($scope, $http, $q) {
       for (sum in info) {
           all = all && info[sum].value;
           if (!all) {
-              console.log("NOT ALL YET");
               break;
           }
       }
       return all;
   }
 
-  function calculateTeamValue (team, summoners) {
+  function calculateTeamValue (team, info) {
       var points = 0;
+
       for (var i = 0; i < team.length; i++) {
-          var summoner = team[i];
-          summoner = summoner.replace(/\s/g, '');
-          points += summoners[summoner] ? summoners[summoner].value : DEFAULT_VALUE;
-          if (!summoners[summoner]) {
-              notFound.push(summoner);
+          var id = team[i];
+          points += info[id] ? info[id].value : DEFAULT_PLAYER_VALUE;
+          if (!info[id]) {
+              notFound.push(id);
           }
       }
       return points / team.length;
@@ -157,23 +175,33 @@ app.controller('controller', function($scope, $http, $q) {
 
   function orderTeams(teams) {
       var orderedTeams = [];
-      var teamsCopy = JSON.parse(JSON.stringify(teams));
+      var array = [];
 
-      while (Object.keys(teamsCopy).length > 0) {
-          var maxVal = -1;
-          var maxKey;
-
-          for (key in teamsCopy) {
-              var val = teamsCopy[key].value;
-              if (val > maxVal) {
-                  maxKey = key;
-                  maxVal = val;
-              }
-          }
-
-          delete teamsCopy[maxKey];
-          orderedTeams.push(maxKey);
+      for (var teamName in teams) {
+          var name = [];
+          name["name"] = teamName;
+          teams[teamName]["name"] = teamName;
+          array.push(teams[teamName]);
       }
+
+      orderedTeams = array.sort (function (a, b) {
+         return a.value - b.value;
+      });
+    //   while (Object.keys(teamsCopy).length > 0) {
+    //       var maxVal = -1;
+    //       var maxKey;
+      //
+    //       for (key in teamsCopy) {
+    //           var val = teamsCopy[key].value;
+    //           if (val > maxVal) {
+    //               maxKey = key;
+    //               maxVal = val;
+    //           }
+    //       }
+      //
+    //       delete teamsCopy[maxKey];
+    //       orderedTeams.push(maxKey);
+    //   }
 
       return orderedTeams;
   }
@@ -237,40 +265,35 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   function persistData() {
-      window.localStorage.setItem("teams", $scope.teams);
+      window.localStorage.setItem("teams", self.teams);
   }
 
   function persistKeys() {
-      window.localStorage.setItem("keys", JSON.stringify($scope.keys));
+      window.localStorage.setItem("keys", JSON.stringify(self.keys));
   }
 
-  function calculatePlayerValue(summoners, summs) {
-      return new Promise(function(resolve, reject) {
-          for (summName in summs) {
-              if (typeof summs[summName].lp !== "undefined") {
-                  var value = 0;
+  function calculatePlayerValue(playerData) {
+      var value = 0;
 
-                    value += summs[summName].lp;
-                    value += divisionToValue(summs[summName].division);
-                    value += tierToValue(summs[summName].tier);
-
-                  summoners[summName].value = value;
-              } else {
-                  if (!summoners[summName].value) {
-                      summoners[summName].value = DEFAULT_VALUE;
-                  }
-              }
+      if (playerData.lp !== "undefined") {
+          value += playerData.lp;
+          value += divisionToValue(playerData.division);
+          value += tierToValue(playerData.tier);
+      } else {
+          if (!playerData.value) {
+              playerData.value = DEFAULT_PLAYER_VALUE;
           }
-          resolve (summoners);
-      })
+      }
+
+      return value;
   }
 
   function getApiKey() {
-      return $scope.keys[api_index++ % $scope.keys.length];
+      return self.keys[api_index++ % self.keys.length];
   }
 
-  function getSummonersInfo(summoners, teams) {
-      return getSummonersInformation(summoners, teams);
+  function getSummonersInfo(summoners) {
+      return getSummonersInformation(summoners);
   }
 
   function valueToDivision (value) {
@@ -349,84 +372,64 @@ app.controller('controller', function($scope, $http, $q) {
       return div;
   }
 
-  function getSummonersInformation(summoners, teams) {
-      var information = {};
+  function getSummonersInformation(ids) {
+      return $q(function (resolve, reject) {
+          var information = {};
 
-      var ids = Object.keys(summoners).map(function(summoner) {
-          return summoners[summoner].id;
-      });
+          var pagedIds = pageIds (ids, 10);
 
-      var ids = pageIds (ids, 10);
-
-      var promises = [];
-      for (var i in ids) {
-          $scope.result += ".";
-          var index = ids[i];
-          var promise = fetchLeagues(index);
-          promises.push(promise);
-      }
-      $q.all(promises).then(function(responses) {
-          var parsePromises = [];
-          for (i in responses) {
-              var response = responses[i];
-              var parsePromise = parseData(summoners, response.data);
-              parsePromises.push(parsePromise);
+          var info = {};
+          var promises = [];
+          for (var i in pagedIds) {
+              var index = pagedIds[i];
+              var promise = fetchLeagues(index);
+              promises.push(promise);
           }
-          $q.all(parsePromises).then(function(summss) {
-              var cpvPromises = [];
-              for (i in summss) {
-                  var summs = summss[i];
-                  cpvPromises.push(calculatePlayerValue(summoners, summs, teams));
+          $q.all(promises).then(function(responses) {
+              var parsePromises = [];
+              for (var i in responses) {
+                  var response = responses[i];
+                  parseData(info, response.data);
               }
-              $q.all(cpvPromises).then(function(responses){
-                  calculateTeamsValue(teams, summoners);
-                  $scope.result = formatOrderedTeams(orderTeams(teams), teams);
-              });
+              resolve (info);
           });
       });
   }
 
-  function formatOrderedTeams(teams, teamsObject) {
+  function formatOrderedTeams(teams) {
       var output = "";
       for (var i = 0; i < teams.length; i++) {
-          output += (i + 1) + ". " + teams[i] + " (" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
+          //   output += (i + 1) + ". " + teams[i] + " (" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
+        output += (i + 1) + ". " + teams[i].name + " (" + valueToDivision(teams[i].value) + ")" + "\n";
       }
       return output;
   }
 
-  function parseData(summoners, data) {
-      return new Promise(function(resolve, reject) {
-          var summs = {};
-          for (summ in summoners) {
-              var id = summoners[summ].id;
-              var soloqData;
-
-              if (id) {
-                  summs[summ] = JSON.parse(JSON.stringify(summoners[summ]));
-                  if (data[id]) {
-                      var summData = data[id];
-                      var soloqData = summData.find(function(entry){
-                          return entry.queue === "RANKED_SOLO_5x5";
-                      });
-                      summs[summ].tier = soloqData.tier;
-                      summs[summ].division = soloqData.entries[0].division;
-                      summs[summ].lp = soloqData.entries[0].leaguePoints;
-                      summs[summ].isFreshBlood = soloqData.entries[0].isFreshBlood;
-                      summs[summ].isHotStreak = soloqData.entries[0].isHotStreak;
-                      summs[summ].isInactive = soloqData.entries[0].isInactive;
-                      summs[summ].isVeteran = soloqData.entries[0].isVeteran;
-                      summs[summ].wins = soloqData.entries[0].wins;
-                      summs[summ].losses = soloqData.entries[0].losses;
-                  }
-              }
+  function parseData(info, data) {
+      for (var id in data) {
+          var summData = data[id];
+          var soloqData = summData.find(function(entry){
+              return entry.queue === "RANKED_SOLO_5x5";
+          });
+          var sum = {
+              tier: soloqData.tier,
+              division: soloqData.entries[0].division,
+              lp: soloqData.entries[0].leaguePoints,
+              isFreshBlood: soloqData.entries[0].isFreshBlood,
+              isHotStreak: soloqData.entries[0].isHotStreak,
+              isInactive: soloqData.entries[0].isInactive,
+              isVeteran: soloqData.entries[0].isVeteran,
+              wins: soloqData.entries[0].wins,
+              losses: soloqData.entries[0].losses,
           }
-          resolve (summs);
-      });
+          info[id] = sum;
+      }
   }
 
   function fetchLeagues(ids) {
     var str = ids.toString();
     var requestLeague = 'https://euw.api.pvp.net/api/lol/euw/v2.5/league/by-summoner/' + str + '/entry?api_key=' + getApiKey();
+    self.result += ".";
     return $http({
         method: 'GET',
         url: requestLeague
@@ -467,11 +470,9 @@ app.controller('controller', function($scope, $http, $q) {
   }
 
   function getSummonerIdsError(error) {
-    console.log("ERROR: ");
-    console.log(error);
   }
 
-  function getSummoners (teams) {
+  function getSummonerIdsAsArray (teams) {
       var summoners = [];
       for (i in teams) {
         var team = teams[i];

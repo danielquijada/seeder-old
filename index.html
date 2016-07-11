@@ -4,7 +4,8 @@
 <head>
 
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="X-UA-Compat
+    ible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -89,13 +90,13 @@
     <section id="application">
       <div class="container">
         <div ng-app="seeder" ng-controller="controller as ctrl">
-          <div ng-if="!seeKeys">
+          <div ng-if="!ctrl.seeKeys">
               <a class="btn btn-default fa fa-plus" ng-click="ctrl.showKeys()" role="button"> Show Keys</a>
           </div>
-          <div ng-if="seeKeys">
+          <div ng-if="ctrl.seeKeys">
               <h2>Keys</h2>
-              <div ng-repeat="key in keys track by $index">
-                  <input class="col-sm-7" type="text" ng-model="keys[$index]">
+              <div ng-repeat="key in ctrl.keys track by $index">
+                  <input class="col-sm-7" type="text" ng-model="ctrl.keys[$index]">
               </div>
               <div class="col-sm-12">
                 <a class="btn btn-success fa fa-plus" ng-click="ctrl.addKey()" role="button"> Add Key</a>
@@ -105,20 +106,20 @@
           <div ng-if="keys.length != 0">
               <form class="col-sm-6 text-center">
                 <p>Teams:</p>
-                <textarea class="form-control" ng-model="teams" rows="20"></textarea>
+                <textarea class="form-control" ng-model="ctrl.teams" rows="20" ng-change="ctrl.change()"></textarea>
                 <a class="btn btn-default" ng-click="ctrl.formatInput()" role="button">Format</a>
-                <a class="btn btn-primary" ng-click="ctrl.calculate()" role="button">Submit</a>
+                <a class="btn btn-primary" ng-click="ctrl.calculate()" role="button">Calculate</a>
                 <a class="btn btn-success" ng-click="ctrl.addTeam()" role="button">Add Team</a>
                 <a class="btn btn-danger" ng-click="ctrl.saveTeamsJson()" role="button">Save JSON</a>
               </form>
-              <form class="col-sm-6 text-center" ng-if="newTeam">
+              <form class="col-sm-6 text-center" ng-if="ctrl.newTeam">
                 <p>New Team:</p>
                 <label class="col-sm-6 text-right">Team Name:</label>
-                <input type="text" ng-model="new.name">
+                <input type="text" ng-model="ctrl.new.name">
                 <hr>
-                <div ng-repeat="player in new.members track by $index">
-                    <label class="col-sm-6 text-right">Player #{{$index}}:</label>
-                    <input type="text" ng-model="new.members[$index]">
+                <div ng-repeat="player in ctrl.new.members track by $index">
+                    <label class="col-sm-6 text-right">Player #{{$index + 1}}:</label>
+                    <input type="text" ng-model="ctrl.new.members[$index]" placeholder="http://www.lolking.net/summoner/euw/22751690">
                 </div>
                 <div>
                     <a class="btn fa fa-times has-icon btn-default" ng-click="ctrl.cancelNewTeam()" role="button"> Cancel</a>
@@ -126,9 +127,9 @@
                     <a class="btn fa fa-save has-icon btn-primary" ng-click="ctrl.saveNewTeam()" role="button"> Save</a>
                 </div>
               </form>
-              <div class="col-sm-6" ng-if="!newTeam">
+              <div class="col-sm-6" ng-if="!ctrl.newTeam">
                 <p class="text-center">Results:</p>
-                <textarea readonly class="form-control" rows="20">{{result | formatJson}}</textarea>
+                <textarea readonly class="form-control" rows="20">{{ctrl.result | formatJson}}</textarea>
               </div>
             </div>
         </div>
