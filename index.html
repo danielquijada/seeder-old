@@ -49,7 +49,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#page-top">Start Bootstrap</a>
+                <a class="navbar-brand" href="#page-top">LoL Seeder</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -98,6 +98,7 @@
                     <h2>Keys</h2>
                     <div ng-repeat="key in ctrl.keys track by $index">
                         <input class="col-sm-7" type="text" ng-model="ctrl.keys[$index]">
+                        <a class="btn btn-default fa fa-question-circle-o" href="https://developer.riotgames.com/docs/api-keys"></a>
                     </div>
                     <div class="col-sm-12">
                         <a class="btn btn-success fa fa-plus" ng-click="ctrl.addKey()" role="button"> Add Key</a>
