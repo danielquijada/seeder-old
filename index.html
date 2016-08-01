@@ -98,7 +98,7 @@
                     <h2>Keys</h2>
                     <div ng-repeat="key in ctrl.keys track by $index">
                         <input class="col-sm-7" type="text" ng-model="ctrl.keys[$index]">
-                        <a class="btn has-icon btn-default fa fa-question-circle-o" href="https://developer.riotgames.com/docs/api-keys" ng-if="$index=0">Help</a>
+                        <a class="btn has-icon btn-default fa fa-question-circle-o" href="https://developer.riotgames.com/docs/api-keys" ng-if="$index===0">Help</a>
                     </div>
                     <div class="col-sm-12">
                         <a class="btn btn-success fa fa-plus" ng-click="ctrl.addKey()" role="button"> Add Key</a>
