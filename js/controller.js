@@ -70,7 +70,7 @@ app.controller('controller', function($http, $scope, $q) {
 
   function processCSV(csv) {
       var promptText = 'Introduzca la expresión regular para reconocer cada línea. En el primer grupo debe estar el equipo y en el segundo el id del invocador.';
-      var defaultRegex = '(.*);.*?(\d+)'
+      var defaultRegex = '(.*);.*?(\\d+)'
       var regex = new RegExp (prompt (promptText,defaultRegex), 'g');
     //   var regex = /(.*);.*;.*;.*;.*?(\d+);.*;.*;.*;.*/g;
       var matches = [];
