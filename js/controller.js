@@ -69,7 +69,10 @@ app.controller('controller', function($http, $scope, $q) {
   document.getElementById('csvIn').addEventListener('change', parseFile, false);
 
   function processCSV(csv) {
-      var regex = /(.*);.*;.*;.*;.*?(\d+);.*;.*;.*;.*/g;
+      var promptText = 'Introduzca la expresión regular para reconocer cada línea. En el primer grupo debe estar el equipo y en el segundo el id del invocador.';
+      var defaultRegex = '(.*);.*?(\d+)'
+      var regex = new RegExp (prompt (promptText,defaultRegex), 'g');
+    //   var regex = /(.*);.*;.*;.*;.*?(\d+);.*;.*;.*;.*/g;
       var matches = [];
 
       var match = regex.exec(csv);
