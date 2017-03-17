@@ -58,14 +58,12 @@ app.controller('controller', function ($http, $scope, $q) {
         var defaultRegex = pr != 'null' ? pr : '(.*);.*?(\\d+)'
         var regex = new RegExp(prompt(promptText, defaultRegex), 'g');
         window.localStorage.setItem("regex", regex);
-        var matches = [];
 
-        var match = regex.exec(csv);
+        var matches = [];
         var team;
-        while (match != null) {
-            team = match[1] || team;
-            matches.push([match[1], match[2]]);
-            match = regex.exec(csv);
+        while (match = regex.exec(csv)) {
+            team = match[1] || team || error('El primer jugador debe tener señalado el equipo.');
+            matches.push([team, match[2]]);
         }
 
         return arrayToObject(matches);
@@ -426,7 +424,6 @@ app.controller('controller', function ($http, $scope, $q) {
     function formatOrderedTeams(teams) {
         var output = "";
         for (var i = 0; i < teams.length; i++) {
-            //   output += (i + 1) + ". " + teams[i] + " (" + valueToDivision(teamsObject[teams[i]].value) + ")" + "\n";
             output += (i + 1) + ". " + teams[i].name + " (" + valueToDivision(teams[i].value) + ")" + "\n";
         }
         return output;
@@ -512,6 +509,12 @@ app.controller('controller', function ($http, $scope, $q) {
             }
         }
         return summoners;
+    }
+
+    function error(error) {
+        const errorMsg = 'Ha ocurrido un error' + (error ? ': ' + error : '');
+        console.error(errorMsg);
+        alert(errorMsg);
     }
 });
 
