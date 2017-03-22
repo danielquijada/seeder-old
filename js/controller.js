@@ -14,7 +14,6 @@ app.controller('controller', function ($http, $scope, $q) {
     var notFound = [];
     var data = retrieveData();
     var keys = retrieveKeys();
-    var prevRegex = window.localStorage.getItem("regex");
     var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
 
     this.teams = data ? data : example;
@@ -53,12 +52,7 @@ app.controller('controller', function ($http, $scope, $q) {
     document.getElementById('csvIn').addEventListener('change', parseFile, false);
 
     function processCSV(csv) {
-        var promptText = 'Introduzca la expresión regular para reconocer cada línea. En el primer grupo debe estar el equipo (si se omite, se agregará al equipo anterior) y en el segundo el id del invocador.';
-        var pr = prevRegex.replace(/^\/|\/.*/g, '');
-        var defaultRegex = pr != 'null' ? pr : '(.*);.*?(\\d+)'
-        var regex = new RegExp(prompt(promptText, defaultRegex), 'g');
-        window.localStorage.setItem("regex", regex);
-
+        var regex = getRegex();
         var matches = [];
         var team;
         while (match = regex.exec(csv)) {
@@ -67,6 +61,14 @@ app.controller('controller', function ($http, $scope, $q) {
         }
 
         return arrayToObject(matches);
+    }
+
+    function getRegex() {
+        var promptText = 'Introduzca la expresión regular para reconocer cada línea. En el primer grupo debe estar el equipo (si se omite, se agregará al equipo anterior) y en el segundo el id del invocador.';
+        var defaultRegex = window.localStorage.getItem("regex") || '(.*);.*?(\\d+)';
+        var regex = prompt(promptText, defaultRegex);
+        window.localStorage.setItem("regex", regex);
+        return new RegExp(regex);
     }
 
     function arrayToObject(array) {
