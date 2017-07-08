@@ -308,8 +308,12 @@ app.controller('controller', function ($http, $scope, $q) {
     }
 
     function getSummonersInfo(summoners) {
-        console.log('Summoners:', summoners);
         var info = {};
+        self.retrieved = {
+            current: 0,
+            fetched: 0,
+            total: summoners.length
+        }
         return getSummonersInformation(info, summoners);
     }
 
@@ -407,6 +411,7 @@ app.controller('controller', function ($http, $scope, $q) {
                                 timeout
                             );
                         } else {
+                            self.retrieved.current++;
                             getSummonersInformation(info, ids, currentIdIndex + 1).then(fullInfo => resolve(fullInfo));
                             parseData(info, response.data);
                         }
@@ -459,12 +464,25 @@ app.controller('controller', function ($http, $scope, $q) {
         console.log('Fetching for SummID', id);
         var str = id.toString();
         var requestLeagueUrl = 'http://swiollvfer.esy.es/lolapi.php/rank/' + str;
-        self.result += ".";
         console.log('\tURL:', requestLeagueUrl);
+        updateResult();
         return $http({
             method: 'GET',
             url: requestLeagueUrl
         });
+    }
+
+    function updateResult() {
+        self.result = 'Buscando' + elipsis(self.retrieved.fetched++, 4) + ' (' + self.retrieved.current + '/' + self.retrieved.total + ')';
+    }
+
+    function elipsis (round, spaces) {
+        var mod = round % (spaces + 1);
+        var result = '';
+        for (var i = 0; i < spaces; i++) {
+            result += i < mod ? '.' : ' ';
+        }
+        return result;
     }
 
     function pageIds(ids, pageSize) {
