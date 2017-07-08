@@ -13,3 +13,12 @@ section.success {
 .navbar-default {
     background-color: #000;
 }
+
+table.about-table td {
+    padding: 10px;
+    text-align: justify;
+}
+
+table.about-table tr.bold-row {
+    font-weight: bolder;
+}
