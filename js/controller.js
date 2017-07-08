@@ -12,13 +12,9 @@ app.controller('controller', function ($http, $scope, $q) {
     var TIER_VALUE = 500;
 
     var notFound = [];
-    var data = retrieveData();
-    var keys = retrieveKeys();
-    var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
 
-    this.teams = data ? data : example;
-    self.keys = keys ? keys : [];
-    self.seeKeys = self.keys.length === 0 ? true : false;
+    var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
+    this.teams = retrieveData() || example;
 
     self.formatInput = function () {
         var teams = JSON.parse(self.teams);
@@ -290,10 +286,6 @@ app.controller('controller', function ($http, $scope, $q) {
         return window.localStorage.getItem("teams");
     }
 
-    function retrieveKeys() {
-        return JSON.parse(window.localStorage.getItem("keys"));
-    }
-
     function persistData() {
         window.localStorage.setItem("teams", self.teams);
     }
@@ -315,12 +307,10 @@ app.controller('controller', function ($http, $scope, $q) {
         return value;
     }
 
-    function getApiKey() {
-        return self.keys[api_index++ % self.keys.length];
-    }
-
     function getSummonersInfo(summoners) {
-        return getSummonersInformation(summoners);
+        console.log('Summoners:', summoners);
+        var info = {};
+        return getSummonersInformation(info, summoners);
     }
 
     function valueToDivision(value) {
@@ -399,29 +389,45 @@ app.controller('controller', function ($http, $scope, $q) {
         return div;
     }
 
-    function getSummonersInformation(ids) {
-        return $q(function (resolve, reject) {
-            var information = {};
+    function getSummonersInformation(info, ids, currentIdIndex) {
+        currentIdIndex = currentIdIndex || 0;
 
-            var pagedIds = pageIds(ids, 10);
-
-            var info = {};
-            var promises = [];
-            for (var i in pagedIds) {
-                var index = pagedIds[i];
-                var promise = fetchLeagues(index);
-                promises.push(promise);
-            }
-            $q.all(promises).then(function (responses) {
-                var parsePromises = [];
-                for (var i in responses) {
-                    var response = responses[i];
-                    parseData(info, response.data);
-                }
+        console.log('Info at [' + currentIdIndex + ']', JSON.parse(JSON.stringify(info)));
+        return $q((resolve, reject) => {
+            if (ids.length > currentIdIndex) {
+                fetchLeague(ids[currentIdIndex]).then(
+                    function success(response) {
+                        if (response.data.status) {
+                            var timeout = 10000;
+                            console.log('Waiting...' + (timeout / 1000) + 's');
+                            setTimeout(
+                                function () {
+                                    getSummonersInformation(info, ids, currentIdIndex).then(fullInfo => resolve(fullInfo));
+                                },
+                                timeout
+                            );
+                        } else {
+                            getSummonersInformation(info, ids, currentIdIndex + 1).then(fullInfo => resolve(fullInfo));
+                            parseData(info, response.data);
+                        }
+                    },
+                    function error(error) {
+                        var timeout = 1000;
+                        console.log('Waiting...' + (timeout / 1000) + 's');
+                        setTimeout(
+                            function () {
+                                getSummonersInformation(info, ids, currentIdIndex).then(fullInfo => resolve(fullInfo));
+                            },
+                            timeout
+                        );
+                    }
+                )
+            } else {
                 resolve(info);
-            });
+            }
         });
     }
+
 
     function formatOrderedTeams(teams) {
         var output = "";
@@ -432,36 +438,32 @@ app.controller('controller', function ($http, $scope, $q) {
     }
 
     function parseData(info, data) {
-        for (var id in data) {
-            var summData = data[id];
-            console.log(id);
-            var soloqData = summData.find(function (entry) {
-                return entry.queue === "RANKED_SOLO_5x5";
-            });
-            if (soloqData) {
-                var sum = {
-                    tier: soloqData.tier,
-                    division: soloqData.entries[0].division,
-                    lp: soloqData.entries[0].leaguePoints,
-                    isFreshBlood: soloqData.entries[0].isFreshBlood,
-                    isHotStreak: soloqData.entries[0].isHotStreak,
-                    isInactive: soloqData.entries[0].isInactive,
-                    isVeteran: soloqData.entries[0].isVeteran,
-                    wins: soloqData.entries[0].wins,
-                    losses: soloqData.entries[0].losses,
-                }
-                info[id] = sum;
+        var soloqData = data.find(entry => entry.queueType === 'RANKED_SOLO_5x5');
+        if (soloqData) {
+            var SummId = soloqData.playerOrTeamId;
+            info[SummId] = {
+                tier: soloqData.tier,
+                division: soloqData.rank,
+                lp: soloqData.leaguePoints,
+                isFreshBlood: soloqData.freshBlood,
+                isHotStreak: soloqData.hotStreak,
+                isInactive: soloqData.inactive,
+                isVeteran: soloqData.veteran,
+                wins: soloqData.wins,
+                losses: soloqData.losses,
             }
         }
     }
 
-    function fetchLeagues(ids) {
-        var str = ids.toString();
-        var requestLeague = 'https://euw.api.pvp.net/api/lol/euw/v2.5/league/by-summoner/' + str + '/entry?api_key=' + getApiKey();
+    function fetchLeague(id) {
+        console.log('Fetching for SummID', id);
+        var str = id.toString();
+        var requestLeagueUrl = 'http://swiollvfer.esy.es/lolapi.php/rank/' + str;
         self.result += ".";
+        console.log('\tURL:', requestLeagueUrl);
         return $http({
             method: 'GET',
-            url: requestLeague
+            url: requestLeagueUrl
         });
     }
 
@@ -475,14 +477,6 @@ app.controller('controller', function ($http, $scope, $q) {
             start = end;
         }
         return array;
-    }
-
-    function getSummonerIds(array) {
-        var requestSumm = 'https://euw.api.pvp.net/api/lol/euw/v1.4/summoner/by-name/' + array.toString() + '?api_key=' + getApiKey();
-        return $http({
-            method: 'GET',
-            url: requestSumm
-        });;
     }
 
     function getSummonerIdsSuccess(response) {
