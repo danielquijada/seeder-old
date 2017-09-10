@@ -469,7 +469,7 @@ app.controller('controller', function ($http, $scope, $q) {
     function fetchLeague(id) {
         console.log('Fetching for SummID', id);
         var str = id.toString();
-        var requestLeagueUrl = 'http://unshed-painters.000webhostapp.com/lolapi.php/rank/' + str;
+        var requestLeagueUrl = 'https://unshed-painters.000webhostapp.com/lolapi.php/rank/' + str;
         console.log('\tURL:', requestLeagueUrl);
         updateResult();
         return $http({
