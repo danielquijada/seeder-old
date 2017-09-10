@@ -51,7 +51,12 @@ app.controller('controller', function ($http, $scope, $q) {
         var regex = getRegex();
         var matches = [];
         var team;
-        while (match = regex.exec(csv)) {
+        var lines = csv.split('\n');
+        while (lines.length > 0) {
+            var line = lines.splice(0, 1)[0];
+            match = regex.exec(line);
+            console.log('Match', match);
+            debugger;
             team = match[1] || team || error('El primer jugador debe tener señalado el equipo.');
             matches.push([team, match[2]]);
         }
@@ -87,6 +92,7 @@ app.controller('controller', function ($http, $scope, $q) {
             var reader = new FileReader();
             reader.readAsText(file, "windows-1252");
             reader.onload = function (e) {
+                console.log('gonnaReadCSV');
                 var teams = processCSV(e.target.result);
                 self.teams = formatJson(teams);
                 $scope.$apply();
@@ -463,7 +469,7 @@ app.controller('controller', function ($http, $scope, $q) {
     function fetchLeague(id) {
         console.log('Fetching for SummID', id);
         var str = id.toString();
-        var requestLeagueUrl = 'http://swiollvfer.esy.es/lolapi.php/rank/' + str;
+        var requestLeagueUrl = 'http://unshed-painters.000webhostapp.com/lolapi.php/rank/' + str;
         console.log('\tURL:', requestLeagueUrl);
         updateResult();
         return $http({
