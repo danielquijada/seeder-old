@@ -424,7 +424,7 @@ app.controller('controller', function ($http, $scope, $q) {
                     },
                     function error(error) {
                         var timeout = 1000;
-                        console.log('Waiting...' + (timeout / 1000) + 's');
+                        console.log('ERROR. Waiting...' + (timeout / 1000) + 's');
                         setTimeout(
                             function () {
                                 getSummonersInformation(info, ids, currentIdIndex).then(fullInfo => resolve(fullInfo));
