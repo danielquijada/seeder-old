@@ -47,20 +47,30 @@ app.controller('controller', function ($http, $scope, $q) {
 
     document.getElementById('csvIn').addEventListener('change', parseFile, false);
 
-    function processCSV(csv) {
-        var regex = getRegex();
+    self.parseBulk = function () {
+        var defaultRegex = /^(.*?)\s{6}http:\/\/www.lolking.net\/summoner\/euw\/(\d+)/;
+        var processed = processCSV(self.teams, defaultRegex);
+        console.log(processed);
+        self.teams = formatJson(processed);
+    }
+
+    function processCSV(csv, defaultRegex) {
+        var regex = defaultRegex || getRegex();
         var matches = [];
         var team;
         var lines = csv.split('\n');
+        console.log(lines);
         while (lines.length > 0) {
             var line = lines.splice(0, 1)[0];
             match = regex.exec(line);
             console.log('Match', match);
-            debugger;
+            if (!match) {
+                continue;
+            }
             team = match[1] || team || error('El primer jugador debe tener señalado el equipo.');
             matches.push([team, match[2]]);
         }
-
+        console.log(matches);
         return arrayToObject(matches);
     }
 
@@ -81,7 +91,7 @@ app.controller('controller', function ($http, $scope, $q) {
             }
             object[array[i][0]].push(array[i][1]);
         }
-
+        console.log('Object', object);
         return object;
     }
 
@@ -403,12 +413,14 @@ app.controller('controller', function ($http, $scope, $q) {
         currentIdIndex = currentIdIndex || 0;
 
         console.log('Info at [' + currentIdIndex + ']', JSON.parse(JSON.stringify(info)));
+        console.log('IDs', ids);
+        
         return $q((resolve, reject) => {
             if (ids.length > currentIdIndex) {
                 fetchLeague(ids[currentIdIndex]).then(
                     function success(response) {
                         if (response.data.status) {
-                            var timeout = 10000;
+                            var timeout = 1000;
                             console.log('Waiting...' + (timeout / 1000) + 's');
                             setTimeout(
                                 function () {
