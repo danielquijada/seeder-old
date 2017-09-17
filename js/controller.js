@@ -288,11 +288,8 @@ app.controller('controller', function ($http, $scope, $q) {
             case "DIAMOND":
                 number = 4;
                 break;
-            case "MASTER":
-                number = 5;
                 break;
-            case "CHALLENGER":
-                number = 6;
+            case "CHALLENGER": // Reaching challenger gives you an extra boost of 400LP for the purposes of this calculation
                 break;
         };
         return number * TIER_VALUE;
