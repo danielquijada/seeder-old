@@ -99,7 +99,7 @@
                 <div class="row" ng-if="keys.length != 0">
                     <form class="col-sm-6 text-center">
                         <p>Teams:</p>
-                        <textarea class="form-control" ng-model="ctrl.teams" rows="20" ng-change="ctrl.change()"></textarea>
+                        <textarea class="form-control" ng-model="ctrl.data" rows="20" ng-change="ctrl.change()"></textarea>
                         <a class="btn btn-default" ng-click="ctrl.parseBulk()" role="button">Bulk to JSON</a>
                         <a class="btn btn-default" ng-click="ctrl.formatInput()" role="button">Format</a>
                         <a class="btn btn-primary" ng-click="ctrl.calculate()" role="button">Calculate</a>

@@ -10,23 +10,29 @@ app.controller('controller', function ($http, $scope, $q) {
     var DEFAULT_PLAYER_VALUE = 500; // Equivalente a S5 0LP
     var DIVISION_VALUE = 100;
     var TIER_VALUE = 500;
+    var TLPELO_VALUE = 5;
 
     var notFound = [];
 
     var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
     this.teams = retrieveData() || example;
+    this.points = {};
+    this.data = [this.teams, this.points];
 
     self.formatInput = function () {
-        var teams = JSON.parse(self.teams);
-        self.teams = formatJson(teams); // Easy-to-Read
+        var data = JSON.parse(self.data);
+        self.data = formatJson(data); // Easy-to-Read
         persistData();
     }
 
     self.calculate = function () {
         notFound.splice(0, notFound.length);
         self.result = 'Buscando';
-        var teams = JSON.parse(self.teams);
-        self.teams = formatJson(teams); // Easy-to-Read
+        var data = JSON.parse(self.data);
+        self.data = formatJson(data); // Easy-to-Read
+
+        var teams = data[0];
+        self.points = data[1];
 
         var summonersIdsArray = getSummonerIdsAsArray(teams);
         getSummonersInfo(summonersIdsArray).then(function (info) {
@@ -36,7 +42,7 @@ app.controller('controller', function ($http, $scope, $q) {
 
             for (var team in teams) {
                 var t = teams[team];
-                t.value = calculateTeamValue(t, info);
+                t.value = calculateTeamValue(team, t, info);
             }
 
             var orderedTeams = orderTeams(teams);
@@ -48,10 +54,12 @@ app.controller('controller', function ($http, $scope, $q) {
     document.getElementById('csvIn').addEventListener('change', parseFile, false);
 
     self.parseBulk = function () {
-        var defaultRegex = /^(.*?)\s{6}(?:http:\/\/www.lolking.net\/summoner\/euw\/)?(\d+)/;
-        var processed = processCSV(self.teams, defaultRegex);
+        var defaultRegex = /^(.*?)\s{6}(?:http:\/\/www.lolking.net\/summoner\/euw\/)?(\d+)(?:\s+(\d+))?/;
+        var processed = processCSV(self.data, defaultRegex);
         console.log(processed);
-        self.teams = formatJson(processed);
+        self.teams = processed[0];
+        self.points = processed[1];
+        self.data = formatJson(processed);
     }
 
     function processCSV(csv, defaultRegex) {
@@ -61,6 +69,7 @@ app.controller('controller', function ($http, $scope, $q) {
         var lines = csv.split('\n');
         console.log(lines);
         while (lines.length > 0) {
+            debugger;
             var line = lines.splice(0, 1)[0];
             match = regex.exec(line);
             console.log('Match', match);
@@ -68,7 +77,7 @@ app.controller('controller', function ($http, $scope, $q) {
                 continue;
             }
             team = match[1] || team || error('El primer jugador debe tener señalado el equipo.');
-            matches.push([team, match[2]]);
+            matches.push([team, match[2], match[3] || 0]);
         }
         console.log(matches);
         return arrayToObject(matches);
@@ -84,15 +93,19 @@ app.controller('controller', function ($http, $scope, $q) {
 
     function arrayToObject(array) {
         var object = {};
+        var points = {};
 
         for (var i = 0; i < array.length; i++) {
             if (!object[array[i][0]]) {
                 object[array[i][0]] = [];
+                points[array[i][0]] = [];
             }
             object[array[i][0]].push(array[i][1]);
+            points[array[i][0]].push(array[i][2]);
         }
         console.log('Object', object);
-        return object;
+        console.log('Points', points);
+        return [object, points];
     }
 
     function parseFile(evt) {
@@ -204,17 +217,21 @@ app.controller('controller', function ($http, $scope, $q) {
         return all;
     }
 
-    function calculateTeamValue(team, info) {
-        var points = 0;
+    function calculateTeamValue(teamName, team, info) {
+        var points = meanPoints(teamName) * TLPELO_VALUE;
+        var eloPoints = 0;
 
         for (var i = 0; i < team.length; i++) {
             var id = team[i];
-            points += info[id] ? info[id].value : DEFAULT_PLAYER_VALUE;
+            eloPoints += info[id] ? info[id].value : DEFAULT_PLAYER_VALUE;
             if (!info[id]) {
                 notFound.push(id);
             }
         }
-        return points / team.length;
+
+        eloPoints = eloPoints / team.length;
+        points += eloPoints;
+        return [points, eloPoints];
     }
 
     function calculateTeamsValue(teams, summoners) {
@@ -242,7 +259,7 @@ app.controller('controller', function ($http, $scope, $q) {
         }
 
         orderedTeams = array.sort(function (a, b) {
-            return -(a.value - b.value);
+            return -(a.value[0] - b.value[0]);
         });
 
         return orderedTeams;
@@ -303,7 +320,7 @@ app.controller('controller', function ($http, $scope, $q) {
     }
 
     function persistData() {
-        window.localStorage.setItem("teams", self.teams);
+        window.localStorage.setItem("data", self.data);
     }
 
     function persistKeys() {
@@ -414,7 +431,7 @@ app.controller('controller', function ($http, $scope, $q) {
 
         console.log('Info at [' + currentIdIndex + ']', JSON.parse(JSON.stringify(info)));
         console.log('IDs', ids);
-        
+
         return $q((resolve, reject) => {
             if (ids.length > currentIdIndex) {
                 fetchLeague(ids[currentIdIndex]).then(
@@ -455,9 +472,19 @@ app.controller('controller', function ($http, $scope, $q) {
     function formatOrderedTeams(teams) {
         var output = "";
         for (var i = 0; i < teams.length; i++) {
-            output += (i + 1) + ". " + teams[i].name + " (" + valueToDivision(teams[i].value) + ")" + "\n";
+            let points = meanPoints(teams[i].name);
+            output += (i + 1) + ". " + teams[i].name + " (" + valueToDivision(teams[i].value[1]) + ") + " + points + "\n";
         }
         return output;
+    }
+
+    function meanPoints(teamName) {
+        let pts = self.points[teamName].reduce((sum, x) => Number(sum) + Number(x));
+        let mean = pts / self.points[teamName].length;
+        console.log(teamName + '\'s total points are: ' + pts);
+        console.log(teamName + '\'s mean points are: ' + mean);
+
+        return mean;
     }
 
     function parseData(info, data) {
@@ -494,7 +521,7 @@ app.controller('controller', function ($http, $scope, $q) {
         self.result = 'Buscando' + elipsis(self.retrieved.fetched++, 4) + ' (' + self.retrieved.current + '/' + self.retrieved.total + ')';
     }
 
-    function elipsis (round, spaces) {
+    function elipsis(round, spaces) {
         var mod = round % (spaces + 1);
         var result = '';
         for (var i = 0; i < spaces; i++) {
