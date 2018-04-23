@@ -316,7 +316,7 @@ app.controller('controller', function ($http, $scope, $q) {
     }
 
     function retrieveData() {
-        return window.localStorage.getItem("teams");
+        return window.localStorage.getItem("data");
     }
 
     function persistData() {
