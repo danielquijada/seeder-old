@@ -54,7 +54,7 @@ app.controller('controller', function ($http, $scope, $q) {
     document.getElementById('csvIn').addEventListener('change', parseFile, false);
 
     self.parseBulk = function () {
-        var defaultRegex = /^(.*?)\s{6}(?:http:\/\/www.lolking.net\/summoner\/euw\/)?(\d+)(?:\s+(\d+))?/;
+        var defaultRegex = /^(.*?)\s{6}(?:http:\/\/www.lolking.net\/summoner\/euw\/)?(\d+)(?:\/[^\s]*)?(?:\s+(\d+))?/;
         var processed = processCSV(self.data, defaultRegex);
         console.log(processed);
         self.teams = processed[0];
