@@ -14,10 +14,9 @@ app.controller('controller', function ($http, $scope, $q) {
 
     var notFound = [];
 
-    var example = "{\r\n\t\"marta\": [\r\n\t\t\"40297772\",\r\n\t\t\"22751690\"\r\n\t],\r\n\t\"dani\": [\r\n\t\t\"22242394\",\r\n\t\t\"33568110\"\r\n\t],\r\n\t\"fernix\": [\r\n\t\t\"22307718\"\r\n\t]\r\n}";
-    this.teams = retrieveData() || example;
-    this.points = {};
-    this.data = [this.teams, this.points];
+    this.data = retrieveData() || [{},{}];
+    this.teams = this.data[0]
+    this.points = this.data[1];
 
     self.formatInput = function () {
         var data = JSON.parse(self.data);
